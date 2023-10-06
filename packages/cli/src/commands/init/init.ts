@@ -1,9 +1,8 @@
 import os from 'os';
 import path from 'path';
-import fs from 'fs-extra';
+import fs, {readdirSync} from 'fs-extra';
 import {validateProjectName} from './validate';
 import chalk from 'chalk';
-import DirectoryAlreadyExistsError from './errors/DirectoryAlreadyExistsError';
 import printRunInstructions from './printRunInstructions';
 import {
   CLIError,
@@ -62,12 +61,49 @@ function doesDirectoryExist(dir: string) {
   return fs.existsSync(dir);
 }
 
+function getConflictsForDirectory(directory: string) {
+  return readdirSync(directory);
+}
+
 async function setProjectDirectory(directory: string) {
-  if (doesDirectoryExist(directory)) {
-    throw new DirectoryAlreadyExistsError(directory);
+  const directoryExists = doesDirectoryExist(directory);
+  let deleteDirectory = false;
+
+  if (directoryExists) {
+    const conflicts = getConflictsForDirectory(directory);
+
+    if (conflicts.length > 0) {
+      logger.warn(
+        `The directory ${chalk.bold(
+          directory,
+        )} contains files that will be overwritten:`,
+      );
+
+      for (const conflict of conflicts) {
+        logger.log(`  ${conflict}`);
+      }
+
+      const {replace} = await prompt({
+        type: 'confirm',
+        name: 'replace',
+        message: 'Do you want to replace existing files?',
+      });
+
+      deleteDirectory = replace;
+
+      if (!replace) {
+        throw new CLIError(
+          'Please remove files manually, or choose other directory.',
+        );
+      }
+    }
   }
 
   try {
+    if (deleteDirectory) {
+      fs.removeSync(directory);
+    }
+
     fs.mkdirSync(directory, {recursive: true});
     process.chdir(directory);
   } catch (error) {
