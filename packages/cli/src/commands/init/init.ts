@@ -29,6 +29,7 @@ import {getYarnVersionIfAvailable} from '../../tools/yarn';
 import {createHash} from 'crypto';
 import createGitRepository from './createGitRepository';
 import deepmerge from 'deepmerge';
+import DirectoryAlreadyExistsError from './errors/DirectoryAlreadyExistsError';
 
 const DEFAULT_VERSION = 'latest';
 
@@ -43,6 +44,7 @@ type Options = {
   version?: string;
   packageName?: string;
   installPods?: string | boolean;
+  replaceDirectory?: string | boolean;
 };
 
 interface TemplateOptions {
@@ -55,6 +57,7 @@ interface TemplateOptions {
   skipInstall?: boolean;
   packageName?: string;
   installCocoaPods?: string | boolean;
+  replaceDirectory?: string | boolean;
 }
 
 function doesDirectoryExist(dir: string) {
@@ -65,11 +68,21 @@ function getConflictsForDirectory(directory: string) {
   return readdirSync(directory);
 }
 
-async function setProjectDirectory(directory: string) {
+async function setProjectDirectory(
+  directory: string,
+  replaceDirectory: string,
+) {
   const directoryExists = doesDirectoryExist(directory);
+
+  if (replaceDirectory === 'false' && directoryExists) {
+    throw new DirectoryAlreadyExistsError(directory);
+  }
+
   let deleteDirectory = false;
 
-  if (directoryExists) {
+  if (replaceDirectory === 'true' && directoryExists) {
+    deleteDirectory = true;
+  } else if (directoryExists) {
     const conflicts = getConflictsForDirectory(directory);
 
     if (conflicts.length > 0) {
@@ -92,9 +105,7 @@ async function setProjectDirectory(directory: string) {
       deleteDirectory = replace;
 
       if (!replace) {
-        throw new CLIError(
-          'Please remove files manually, or choose other directory.',
-        );
+        throw new DirectoryAlreadyExistsError(directory);
       }
     }
   }
@@ -146,6 +157,7 @@ async function createFromTemplate({
   skipInstall,
   packageName,
   installCocoaPods,
+  replaceDirectory,
 }: TemplateOptions) {
   logger.debug('Initializing new project');
   logger.log(banner);
@@ -168,7 +180,10 @@ async function createFromTemplate({
     packageManager = 'npm';
   }
 
-  const projectDirectory = await setProjectDirectory(directory);
+  const projectDirectory = await setProjectDirectory(
+    directory,
+    String(replaceDirectory),
+  );
 
   const loader = getLoader({text: 'Downloading template'});
   const templateSourceDir = fs.mkdtempSync(
@@ -381,6 +396,7 @@ async function createProject(
     skipInstall: options.skipInstall,
     packageName: options.packageName,
     installCocoaPods: options.installPods,
+    replaceDirectory: options.replaceDirectory,
   });
 }
 

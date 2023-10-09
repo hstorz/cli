@@ -47,5 +47,9 @@ export default {
       description:
         'Inits a project with a custom package name (Android) and bundle ID (iOS), e.g. com.example.app',
     },
+    {
+      name: '--replace-directory [boolean]',
+      description: 'Replaces the directory if it already exists.',
+    },
   ],
 };

@@ -101,6 +101,7 @@ Skip dependencies installation
 Determine if CocoaPods should be installed when initializing a project. If set to `true` it will install pods, if set to `false`, it will skip the step entirely. If not used, prompt will be displayed
 
 #### `--npm`
+
 > [!WARNING]  
 > `--npm` is deprecated and will be removed in the future. Please use `--pm npm` instead.
 
@@ -116,6 +117,10 @@ Create project with custom package name for Android and bundle identifier for iO
 
 - contain at least two segments separated by dots, e.g. `com.example`
 - contain only alphanumeric characters and dots
+
+#### `--replace-directory <string>`
+
+Replaces the directory if it already exists
 
 ### `upgrade`
 
