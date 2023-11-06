@@ -60,6 +60,7 @@ interface TemplateOptions {
   installCocoaPods?: string | boolean;
 }
 
+// Here we are defining explicit version of Yarn to be used in the new project because in some cases providing `3.x` don't work.
 const YARN_VERSION = '3.6.4';
 
 const bumpYarnVersion = async (silent: boolean, root: string) => {
