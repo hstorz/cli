@@ -82,7 +82,6 @@ function getArgumentsForLineNumber(
     case 'wstorm':
     case 'appcode':
     case 'charm':
-    case 'idea':
       return [`${fileName}:${lineNumber}`];
     case 'joe':
     case 'emacs':
@@ -91,6 +90,7 @@ function getArgumentsForLineNumber(
     case 'rmate':
     case 'mate':
     case 'mine':
+    case 'idea':
       return ['--line', String(lineNumber), fileName];
     case 'code':
     case 'code-insiders':
